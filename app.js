@@ -3,6 +3,8 @@ const exphbs  = require('express-handlebars');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const methodOverride = require('method-override');
+const flash = require('connect-flash');
+const session = require('express-session');
 
 const app = express();
 
@@ -34,6 +36,24 @@ app.use(bodyParser.json());
 //method-override middleware
 app.use(methodOverride('_method'));
 
+// Use the Express session middleware
+app.use(session({ 
+	secret: 'secret', 
+	resave: true,
+	saveUninitialized: true
+}));
+
+//Connect flash middleware
+app.use(flash());
+
+//Global Variables
+app.use(function(req,res,next){
+	res.locals.success_msg = req.flash('success_msg');
+	res.locals.error_msg = req.flash('error_msg');
+	res.locals.error = req.flash('error');
+	next();
+});
+
 //index route
 app.get('/', (req,res)=>{
 	const title = 'Welcome'
@@ -48,7 +68,7 @@ app.get('/about', (req,res) =>{
 });
 
 //Scribble Page
-app.get('/scribbles', (req,res) => {
+app.get('/diary', (req,res) => {
 	idea.find({})
 	.sort({date:'desc'})
 	.then(ideas =>{
@@ -77,7 +97,7 @@ app.get('/diary/edit/:id', (req,res) =>{
 });
 
 //Process Form
-app.post('/scribbles', (req,res) => {
+app.post('/diary', (req,res) => {
 
 	let errors = [];
 
@@ -102,7 +122,8 @@ app.post('/scribbles', (req,res) => {
 		new idea(newUser)
 		.save()
 		.then(idea => {
-			res.redirect('/scribbles');
+			req.flash('success_msg','Scribble Added!');
+			res.redirect('/diary');
 		})
 	}
 });
@@ -119,16 +140,18 @@ app.put('/diary/:id', (req, res) =>{
 
 		idea.save()
 		.then(idea => {
-			res.redirect('/scribbles');
+			req.flash('success_msg','Scribble Updated!');
+			res.redirect('/diary');
 		})
 	});
 });
 
 //Delete Idea
 app.delete('/diary/:id', (req,res)=>{
-	idea.remove({_id: req.params.id})
+	idea.deleteOne({_id: req.params.id})
 	.then(() => {
-		res.redirect('/scribbles');	
+		req.flash('success_msg','Scribble Removed!');
+		res.redirect('/diary');	
 	});	
 });
 const port = 5000 || process.env.PORT;
