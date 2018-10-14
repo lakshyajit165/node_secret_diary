@@ -17,8 +17,10 @@ const users = require('./routes/users');
 //Passport config
 require('./config/passport')(passport);
 
+//DB config
+const db = require('./config/database');
 //Connect to Mongoose
-mongoose.connect('mongodb://localhost/vidjot-dev',{
+mongoose.connect(db.mongoURI,{
 	useNewUrlParser: true
 })
 .then(() => {
