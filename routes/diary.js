@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
+const {ensureAuthenticated} = require('../helpers/auth');
+
 
 //Load Idea Model
 require('../models/Idea');
@@ -8,8 +10,8 @@ const idea = mongoose.model('ideas');
 
 
 //Scribble Page
-router.get('/', (req,res) => {
-	idea.find({})
+router.get('/',ensureAuthenticated, (req,res) => {
+	idea.find({user: req.user.id})
 	.sort({date:'desc'})
 	.then(ideas =>{
 		res.render('diary/index',{
@@ -19,25 +21,34 @@ router.get('/', (req,res) => {
 	
 });
 //Add Scribble Form
-router.get('/add', (req,res) =>{
+router.get('/add', ensureAuthenticated, (req,res) =>{
 	res.render('diary/add');
 });
 
 //Edit Scribble Form
-router.get('/edit/:id', (req,res) =>{
+router.get('/edit/:id', ensureAuthenticated, (req,res) =>{
 	idea.findOne({
 		_id: req.params.id
 	})
 	.then(idea => {
-		res.render('diary/edit', {
+		if(idea.user != req.user.id){
+			req.flash('error_msg','Not Authorized');
+			res.redirect('/diary');
+		}else{
+		
+			res.render('diary/edit', {
 			idea: idea
-		});	
+			});
+		}
+			
+			
 	});
+		
 	
 });
 
 //Process Form
-router.post('/', (req,res) => {
+router.post('/', ensureAuthenticated, (req,res) => {
 
 	let errors = [];
 
@@ -57,7 +68,8 @@ router.post('/', (req,res) => {
 	}else{
 		const newUser = {
 			title: req.body.title,
-			details: req.body.details
+			details: req.body.details,
+			user: req.user.id
 		}
 		new idea(newUser)
 		.save()
@@ -69,7 +81,7 @@ router.post('/', (req,res) => {
 });
 
 //Editing Scribble
-router.put('/:id', (req, res) =>{
+router.put('/:id', ensureAuthenticated, (req, res) =>{
 	idea.findOne({
 		_id: req.params.id
 	})
@@ -87,7 +99,7 @@ router.put('/:id', (req, res) =>{
 });
 
 //Delete Idea
-router.delete('/:id', (req,res)=>{
+router.delete('/:id', ensureAuthenticated, (req,res)=>{
 	idea.deleteOne({_id: req.params.id})
 	.then(() => {
 		req.flash('success_msg','Scribble Removed!');

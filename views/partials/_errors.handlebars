@@ -1,4 +1,8 @@
+{{#if error}}
+	<div class="alert alert-danger text-center col-lg-8 mx-auto">{{error}}</div>
+{{/if}}
+
 {{#each errors}}
-	<div class="alert alert-danger col-lg-8 mx-auto">{{text}}</div>
+	<div class="alert alert-danger text-center col-lg-8 mx-auto">{{text}}</div>
 {{else}}
 {{/each}}	
