@@ -90,8 +90,8 @@ app.get('/about', (req,res) =>{
 app.use('/diary',diary);
 app.use('/users',users);
 
-const port = 5000 || process.env.PORT;
+const port = process.env.PORT || 5000;
 
 app.listen(port, () => {
-	console.log(`Server start on port ${port}`);
+	console.log('Server start...');
 });
